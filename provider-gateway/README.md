@@ -99,3 +99,69 @@ fly deploy
 ## Cost
 
 Runs on Fly.io's cheapest shared-CPU plan (~$5-15/mo). The main cost is whatever you're paying the provider — the proxy itself is negligible.
+
+## Running Tests
+
+Tests use a mock provider so no real API key is needed. They verify auth, rate limiting, and usage logging end-to-end.
+
+### 1. Start the test stack
+
+```bash
+cd tests
+docker compose -f docker-compose.test.yml up -d --build
+```
+
+Wait for all services to be healthy (check with `docker compose ps`).
+
+### 2. Install test dependencies
+
+```bash
+pip install -r tests/requirements-test.txt
+```
+
+### 3. Run tests
+
+```bash
+cd tests
+pytest -v --asyncio-mode=auto
+```
+
+### 4. Shut down test stack when done
+
+```bash
+docker compose -f docker-compose.test.yml down --volumes
+```
+
+### Expected Results
+
+All tests should pass with green `PASSED`. Here's what each test covers:
+
+| Test | What it checks |
+|------|----------------|
+| `test_no_key_returns_401` | Request without `Authorization` header → 401 |
+| `test_invalid_key_returns_401` | Request with unknown key → 401 |
+| `test_valid_key_without_subscription_returns_403` | Valid key but no active membership → 403 |
+| `test_valid_key_with_active_subscription_returns_200` | Valid key + active membership → 200 with response |
+| `test_health_endpoint` | `GET /health` returns `{"status": "ok"}` |
+| `test_rate_limit_exceeded_returns_429` | 6th request within a minute → 429 |
+| `test_rate_limit_resets_with_different_user` | Different user isn't affected by another's rate limit |
+| `test_usage_logged_on_successful_request` | Non-streaming request creates a `UsageLog` row |
+| `test_usage_logged_on_streaming_request` | Streaming request also creates a `UsageLog` row |
+| `test_no_usage_logged_on_auth_failure` | Failed auth doesn't write to `UsageLog` |
+
+You should see:
+
+```
+tests/test_auth.py::test_no_key_returns_401 PASSED
+tests/test_auth.py::test_invalid_key_returns_401 PASSED
+tests/test_auth.py::test_valid_key_without_subscription_returns_403 PASSED
+tests/test_auth.py::test_valid_key_with_active_subscription_returns_200 PASSED
+tests/test_auth.py::test_health_endpoint PASSED
+tests/test_rate_limit.py::test_rate_limit_exceeded_returns_429 PASSED
+tests/test_rate_limit.py::test_rate_limit_resets_with_different_user PASSED
+tests/test_usage_log.py::test_usage_logged_on_successful_request PASSED
+tests/test_usage_log.py::test_usage_logged_on_streaming_request PASSED
+tests/test_usage_log.py::test_no_usage_logged_on_auth_failure PASSED
+
+10 passed in ~5.32s
+```
