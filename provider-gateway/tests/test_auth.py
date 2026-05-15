@@ -10,7 +10,7 @@ async def test_no_key_returns_401(client):
 
 
 @pytest.mark.asyncio
-async def test_invalid_key_returns_401(client):
+async def test_invalid_key_returns_401(client, db):
     resp = await client.post(
         "/v1/chat/completions",
         json={"model": "test", "messages": []},

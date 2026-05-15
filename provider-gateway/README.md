@@ -107,7 +107,7 @@ Tests use a mock provider so no real API key is needed. They verify auth, rate l
 ### 1. Start the test stack
 
 ```bash
-cd tests
+cd provider-gateway/tests
 docker compose -f docker-compose.test.yml up -d --build
 ```
 
@@ -116,19 +116,21 @@ Wait for all services to be healthy (check with `docker compose ps`).
 ### 2. Install test dependencies
 
 ```bash
+cd provider-gateway
 pip install -r tests/requirements-test.txt
 ```
 
 ### 3. Run tests
 
 ```bash
-cd tests
-pytest -v --asyncio-mode=auto
+cd provider-gateway
+pytest tests/ -v
 ```
 
 ### 4. Shut down test stack when done
 
 ```bash
+cd provider-gateway/tests
 docker compose -f docker-compose.test.yml down --volumes
 ```
 

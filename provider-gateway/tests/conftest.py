@@ -1,11 +1,12 @@
 import os
 import pytest
 import hashlib
-import asyncio
 import asyncpg
 import httpx
+import redis.asyncio as redis
 
 TEST_DB_URL = os.environ.get("TEST_DB_URL", "postgresql://test:test@localhost:5433/test")
+TEST_REDIS_URL = os.environ.get("TEST_REDIS_URL", "redis://localhost:6380")
 PROXY_URL = os.environ.get("PROXY_URL", "http://localhost:8081")
 
 TEST_USER_ID = "test-user-0000-0000-000000000001"
@@ -16,18 +17,25 @@ TEST_API_KEY_HASH = hashlib.sha256(TEST_API_KEY_RAW.encode()).hexdigest()
 TEST_API_KEY_HASH_EXPIRED = hashlib.sha256(TEST_API_KEY_RAW_EXPIRED.encode()).hexdigest()
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def db():
     pool = await asyncpg.create_pool(TEST_DB_URL)
     async with pool.acquire() as conn:
         await conn.execute("""
+            CREATE TABLE IF NOT EXISTS "ApiKey" (
+                id TEXT PRIMARY KEY,
+                "userId" TEXT NOT NULL,
+                name TEXT NOT NULL,
+                "keyPrefix" TEXT NOT NULL,
+                "keyHash" TEXT NOT NULL UNIQUE,
+                status TEXT NOT NULL DEFAULT 'ACTIVE',
+                "lastUsedAt" TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS "Membership" (
+                id TEXT PRIMARY KEY,
+                "userId" TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'ACTIVE'
+            );
             CREATE TABLE IF NOT EXISTS "UsageLog" (
                 id TEXT PRIMARY KEY,
                 "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -93,7 +101,14 @@ async def insert_expired_membership(db):
         await conn.execute('DELETE FROM "Membership" WHERE "userId" = $1', TEST_USER_EXPIRED_ID)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function", autouse=True)
+async def flush_redis():
+    r = redis.from_url(TEST_REDIS_URL, decode_responses=True)
+    await r.flushall()
+    await r.aclose()
+
+
+@pytest.fixture(scope="function")
 async def client():
     async with httpx.AsyncClient(base_url=PROXY_URL) as c:
         yield c
