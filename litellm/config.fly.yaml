@@ -1,0 +1,26 @@
+# Production config for Fly.io. Safe to commit: contains NO secrets.
+# Secrets are injected as Fly secrets and resolved here with LiteLLM's native
+# "os.environ/<VAR>" syntax (this image does NOT expand ${VAR} placeholders):
+#   SILICONFLOW_API_KEY  -> upstream model key
+#   LITELLM_MASTER_KEY   -> proxy master key (read directly from env by LiteLLM)
+#   DATABASE_URL         -> LiteLLM's own database on superstackai-db
+#   REDIS_URL            -> Redis for key cache + rate limits
+
+model_list:
+  - model_name: "*"
+    litellm_params:
+      model: "openai/deepseek-ai/DeepSeek-V3"
+      api_base: "https://api.siliconflow.com/v1"
+      api_key: "os.environ/SILICONFLOW_API_KEY"
+    model_info:
+      input_cost_per_token: 1e-5
+      output_cost_per_token: 4e-5
+
+general_settings:
+  telemetry: false
+  disable_spend_logs: false
+
+litellm_settings:
+  num_retries: 0
+  request_timeout: 120
+  drop_params: true
