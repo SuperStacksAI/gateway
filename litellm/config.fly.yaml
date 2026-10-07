@@ -19,6 +19,7 @@ model_list:
 general_settings:
   telemetry: false
   disable_spend_logs: false
+  store_model_in_db: true
 
 litellm_settings:
   num_retries: 0
