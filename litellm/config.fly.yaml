@@ -7,7 +7,7 @@
 #   REDIS_URL            -> Redis for key cache + rate limits
 
 model_list:
-  - model_name: "*"
+  - model_name: "deepseek-v3"
     litellm_params:
       model: "openai/deepseek-ai/DeepSeek-V3"
       api_base: "https://api.siliconflow.com/v1"
