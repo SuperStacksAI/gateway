@@ -1,0 +1,16 @@
+# Private relay app. No public IP: the gateway reaches it over Fly 6PN at
+# http://selfhost-relay.internal:8080. Deploy with: fly deploy -a selfhost-relay
+app = 'selfhost-relay'
+primary_region = 'iad'
+
+[build]
+
+[env]
+  UPSTREAM_HOST = 'gpu-ds'
+  UPSTREAM_PORT = '30000'
+  TS_HOSTNAME = 'selfhost-relay'
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

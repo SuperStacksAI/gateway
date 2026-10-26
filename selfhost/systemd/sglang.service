@@ -1,0 +1,21 @@
+# Install on the 8x B300 node:
+#   sudo cp selfhost/systemd/sglang.service /etc/systemd/system/sglang.service
+#   sudo mkdir -p /etc/selfhost && sudo cp selfhost/.env /etc/selfhost/sglang.env
+#   sudo systemctl daemon-reload && sudo systemctl enable --now sglang
+[Unit]
+Description=SGLang DeepSeek V4.1 server
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/selfhost/sglang.env
+WorkingDirectory=/opt/selfhost
+ExecStart=/opt/selfhost/serve.sh
+Restart=always
+RestartSec=10
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

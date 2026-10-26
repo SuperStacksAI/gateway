@@ -1,0 +1,18 @@
+# Named-tunnel config for cloudflared on the GPU box.
+# Copy to ~/.cloudflared/config.yml and edit.
+#
+#   cloudflared tunnel login
+#   cloudflared tunnel create ds-tunnel
+#   cloudflared tunnel route dns ds-tunnel ds.example.com
+#
+# Then:  cloudflared tunnel --config ~/.cloudflared/config.yml run
+
+tunnel: ds-tunnel
+credentials-file: /home/USER/.cloudflared/TUNNEL-UUID.json
+
+ingress:
+  # Public hostname -> local SGLang (OpenAI-compatible) endpoint.
+  - hostname: ds.example.com
+    service: http://localhost:30000
+  # Everything else -> 404.
+  - service: http_status:404

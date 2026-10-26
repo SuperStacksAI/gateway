@@ -1,0 +1,15 @@
+# Reachable by the LiteLLM app at http://selfhost-relay.internal:8080/v1
+#
+# Forwards to the GPU box over the tailnet. Because tailscaled runs in userspace
+# mode, Caddy routes the upstream connection through its local HTTP proxy.
+{
+	admin off
+}
+
+:8080 {
+	reverse_proxy http://{$UPSTREAM_HOST}:{$UPSTREAM_PORT} {
+		transport http {
+			proxy http://localhost:1055
+		}
+	}
+}
