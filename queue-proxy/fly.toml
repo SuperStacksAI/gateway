@@ -5,6 +5,12 @@ primary_region = 'iad'
 
 [build]
 
+[env]
+  # Dev: forward to the public LiteLLM. At cutover this becomes the private
+  # internal LiteLLM URL (e.g. http://superstackai-gateway-litellm.internal:4000).
+  LITELLM_BASE_URL = 'https://superstackai-gateway.fly.dev'
+  MAX_WAIT_SECONDS = '120'
+
 [http_service]
   internal_port = 8080
   force_https = true
